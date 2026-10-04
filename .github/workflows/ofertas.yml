@@ -1,0 +1,56 @@
+name: Atualizar ofertas da Beeh
+
+on:
+  workflow_dispatch:
+  schedule:
+    - cron: '17 9,21 * * *'
+  push:
+    paths:
+      - gerar_feed.py
+      - .github/workflows/ofertas.yml
+
+permissions:
+  contents: write
+
+concurrency:
+  group: ofertas-da-beeh
+  cancel-in-progress: false
+
+jobs:
+  atualizar:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - name: Baixar arquivos do projeto
+        uses: actions/checkout@v4
+
+      - name: Preparar Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Buscar ofertas e gerar RSS
+        id: feed
+        continue-on-error: true
+        env:
+          SHOPEE_FEED_URL: ${{ secrets.SHOPEE_FEED_URL }}
+        run: python gerar_feed.py
+
+      - name: Salvar feed atualizado
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add public/
+          if [ -f estado.json ]; then
+            git add estado.json
+          fi
+          if ! git diff --cached --quiet; then
+            git commit -m 'Atualizar feed de ofertas'
+            git push
+          fi
+
+      - name: Informar falha na atualização
+        if: steps.feed.outcome == 'failure'
+        run: |
+          echo 'Não foi possível atualizar o catálogo. Verifique o segredo SHOPEE_FEED_URL. O feed foi esvaziado para evitar ofertas antigas.'
+          exit 1
