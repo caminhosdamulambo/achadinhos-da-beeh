@@ -57,7 +57,7 @@ def write_feed(item):
         ET.SubElement(channel, key).text = value
     if item:
         entry = ET.SubElement(channel, 'item')
-        title = ' '.join(item['title'].split())[:300]
+        title = ' '.join(item['title'].split())[:300].replace("'", "’")
         link = 'https://shope.ee/an_redir?' + urllib.parse.urlencode({'origin_link': item['product_link'], 'affiliate_id': AFFILIATE})
         description = '\n'.join(['🛍️ Achadinho da Beeh!', '', title, '', 'Confira preço, estoque, frete e opções no anúncio da Shopee antes de comprar.', '', 'Posso receber comissão pelas compras feitas pelo link 💛', '', 'Teste de link: a atribuição de comissão ainda não foi confirmada.'])
         for key, value in {'title': title, 'description': description, 'link': link, 'pubDate': email.utils.format_datetime(dt.datetime.fromtimestamp(item['created'], dt.timezone.utc))}.items():
