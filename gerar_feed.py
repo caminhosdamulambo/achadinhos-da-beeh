@@ -64,11 +64,9 @@ def write_feed(item):
         prices = []
         if sale > 0:
             prices.append('Valores do catálogo:')
-            if original > sale:
-                prices.append('❌ De: ' + money(original))
-                prices.append('💰 Por: ' + money(sale))
-            else:
-                prices.append('💰 Preço: ' + money(sale))
+            prices.append('💰 Preço: ' + money(sale))
+            
+                
         description = '\n'.join(['🎯 ACHADINHO DA BEEH!', '', '🛍️ ' + title, '', *prices, '', '🔎 Confira preço, estoque, frete e opções no link antes de comprar.', '', 'Publicidade'])
         for key, value in {'title': title, 'description': description, 'link': link, 'pubDate': email.utils.format_datetime(dt.datetime.fromtimestamp(item['created'], dt.timezone.utc))}.items():
             ET.SubElement(entry, key).text = value
