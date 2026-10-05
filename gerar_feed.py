@@ -41,7 +41,7 @@ def select(path, seen, current_id):
             price, rating, shop, discount = (number(row.get(k)) for k in ('sale_price', 'item_rating', 'shop_rating', 'discount_percentage'))
             if not 5 <= price <= 100 or min(rating, shop) < 4.7 or discount < 15:
                 continue
-            candidate = {k: row.get(k, '') for k in ('itemid', 'title', 'image_link', 'product_link')}
+            candidate = {k: row.get(k, '') for k in ('itemid', 'title', 'image_link', 'product_link', 'price', 'sale_price')}
             if row['itemid'] == current_id:
                 current = candidate
             score = discount + rating * 5 + shop * 3
@@ -57,9 +57,19 @@ def write_feed(item):
         ET.SubElement(channel, key).text = value
     if item:
         entry = ET.SubElement(channel, 'item')
-        title = ' '.join(item['title'].split())[:300].replace("'", "’")
+        title = ' '.join(item['title'].split())[:300].replace("'", '’')
         link = 'https://shope.ee/an_redir?' + urllib.parse.urlencode({'origin_link': item['product_link'], 'affiliate_id': AFFILIATE})
-        description = '\n'.join(['🛍️ Achadinho da Beeh!', '', title, '', 'Confira preço, estoque, frete e opções no anúncio da Shopee antes de comprar.', '', 'Posso receber comissão pelas compras feitas pelo link 💛', '', 'Teste de link: a atribuição de comissão ainda não foi confirmada.'])
+        sale, original = number(item.get('sale_price')), number(item.get('price'))
+        money = lambda amount: 'R$ ' + f'{amount:.2f}'.replace('.', ',')
+        prices = []
+        if sale > 0:
+            prices.append('Valores do catálogo:')
+            if original > sale:
+                prices.append('❌ De: ' + money(original))
+                prices.append('💰 Por: ' + money(sale))
+            else:
+                prices.append('💰 Preço: ' + money(sale))
+        description = '\n'.join(['🎯 ACHADINHO DA BEEH!', '', '🛍️ ' + title, '', *prices, '', '🔎 Confira preço, estoque, frete e opções no link antes de comprar.', '', 'Publicidade'])
         for key, value in {'title': title, 'description': description, 'link': link, 'pubDate': email.utils.format_datetime(dt.datetime.fromtimestamp(item['created'], dt.timezone.utc))}.items():
             ET.SubElement(entry, key).text = value
         ET.SubElement(entry, 'guid', isPermaLink='false').text = item['guid']
