@@ -103,7 +103,7 @@ def main():
                     raise ValueError('Catálogo muito grande')
                 output.write(block)
         best, current = select(path, set(state['seen']), old['itemid'] if old else '')
-    if not old or now - old['created'] >= INTERVAL:
+    if not old or not current or now - old['created'] >= INTERVAL:
         if best:
             best.update(created=now, guid='beeh-' + best['itemid'] + '-' + str(int(now)))
             state['item'] = best
